@@ -301,17 +301,29 @@ for(let j=0;j<signRows.length;j++){
 }
 for(let i=0;i<pages.length;i++){ctx=pages[i].getContext('2d');line(M,1668,RIGHT);text('กฟภ. / แบบฟอร์มตัวอย่างสำหรับปรับใช้ภายในหน่วยงาน',M,1702,17,false,'#796d79');text(`หน้า ${i+1} / ${pages.length}`,RIGHT-180,1702,18,true,'#74045f')}return pages}
 async function refreshPreview(){const token=++renderToken;$('refreshPreview').disabled=true;$('downloadPdf').disabled=true;$('pageCount').textContent='กำลังจัดหน้ารายงาน…';const missing=required.filter(f=>!state.fields[f[0]]?.trim()).map(f=>f[1]);$('missingNotice').hidden=!missing.length;$('missingNotice').textContent='ยังไม่ได้ระบุ: '+missing.join(' · ');try{const pages=await buildReport();if(token!==renderToken)return;previewCanvases=pages;$('preview').replaceChildren(...pages);$('pageCount').textContent=`A4 · ${pages.length} หน้า · จัดหน้าตามความยาวข้อความและจำนวนภาพ`}catch(err){toast('สร้างตัวอย่างไม่สำเร็จ: '+err.message);$('pageCount').textContent='กรุณาลองใหม่'}finally{if(token===renderToken){$('refreshPreview').disabled=false;$('downloadPdf').disabled=false}}}
-async function makePdf(canvases){const encoder=new TextEncoder(),parts=[],offsets=[0];let length=0;const add=v=>{const bytes=typeof v==='string'?encoder.encode(v):v;parts.push(bytes);length+=bytes.length};const obj=(n,body)=>{offsets[n]=length;add(`${n} 0 obj\n`);add(body);add('\nendobj\n')};add('%PDF-1.4\n');obj(1,'<< /Type /Catalog /Pages 2 0 R >>');obj(2,`<< /Type /Pages /Count ${canvases.length} /Kids [${canvases.map((_,i)=>`${3+i*3} 0 R`).join(' ')}] >>`);for(let i=0;i<canvases.length;i++){const c=canvases[i],n=3+i*3;obj(n,`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /XObject << /Im0 ${n+1} 0 R >> >> /Contents ${n+2} 0 R >>`);let bytes,filter;
-if(typeof CompressionStream!=='undefined'){
+async function makePdf(canvases,options={}){const encoder=new TextEncoder(),parts=[],offsets=[0];let length=0;const add=v=>{const bytes=typeof v==='string'?encoder.encode(v):v;parts.push(bytes);length+=bytes.length};const obj=(n,body)=>{offsets[n]=length;add(`${n} 0 obj\n`);add(body);add('\nendobj\n')};add('%PDF-1.4\n');obj(1,'<< /Type /Catalog /Pages 2 0 R >>');obj(2,`<< /Type /Pages /Count ${canvases.length} /Kids [${canvases.map((_,i)=>`${3+i*3} 0 R`).join(' ')}] >>`);for(let i=0;i<canvases.length;i++){let c=canvases[i];if(options.scale&&options.scale!==1){const resized=document.createElement('canvas');resized.width=Math.max(1,Math.round(c.width*options.scale));resized.height=Math.max(1,Math.round(c.height*options.scale));const g=resized.getContext('2d');g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';g.drawImage(c,0,0,resized.width,resized.height);c=resized;}const n=3+i*3;obj(n,`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /XObject << /Im0 ${n+1} 0 R >> >> /Contents ${n+2} 0 R >>`);let bytes,filter;
+if(options.quality===undefined&&typeof CompressionStream!=='undefined'){
  const rgba=c.getContext('2d').getImageData(0,0,c.width,c.height).data,rgb=new Uint8Array(c.width*c.height*3);
  for(let p=0,q=0;p<rgba.length;p+=4){rgb[q++]=rgba[p];rgb[q++]=rgba[p+1];rgb[q++]=rgba[p+2];}
  const stream=new Blob([rgb]).stream().pipeThrough(new CompressionStream('deflate'));
  bytes=new Uint8Array(await new Response(stream).arrayBuffer());filter='/FlateDecode';
 }else{
- const raw=atob(c.toDataURL('image/jpeg',1).split(',')[1]);bytes=Uint8Array.from(raw,ch=>ch.charCodeAt(0));filter='/DCTDecode';
+ const raw=atob(c.toDataURL('image/jpeg',options.quality??1).split(',')[1]);bytes=Uint8Array.from(raw,ch=>ch.charCodeAt(0));filter='/DCTDecode';
 }
 offsets[n+1]=length;add(`${n+1} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${c.width} /Height ${c.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter ${filter} /Length ${bytes.length} >>\nstream\n`);add(bytes);add('\nendstream\nendobj\n');const stream='q\n595.28 0 0 841.89 0 0 cm\n/Im0 Do\nQ\n';obj(n+2,`<< /Length ${encoder.encode(stream).length} >>\nstream\n${stream}endstream`)}const xref=length,count=3+canvases.length*3;add(`xref\n0 ${count}\n0000000000 65535 f \n`);for(let i=1;i<count;i++)add(String(offsets[i]).padStart(10,'0')+' 00000 n \n');add(`trailer\n<< /Size ${count} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`);return new Blob(parts,{type:'application/pdf'})}
-$('downloadPdf').onclick=async()=>{const b=$('downloadPdf');b.disabled=true;b.textContent='กำลังสร้าง PDF…';try{await saveNow();const pages=await buildReport(2);download(await makePdf(pages),fileName('pdf'));toast('สร้าง PDF เรียบร้อยแล้ว')}catch(err){toast('สร้าง PDF ไม่สำเร็จ: '+err.message)}finally{b.disabled=false;b.textContent='↓ ดาวน์โหลด PDF'}};
+
+async function makeLimitedPdf(pages,onProgress=()=>{}){
+ const maxBytes=5000000;
+ const presets=[[.97,1],[.93,1],[.87,1],[.80,1],[.90,.8],[.85,.67],[.80,.5],[.65,.4],[.50,.25],[.40,.125]];
+ for(let i=0;i<presets.length;i++){
+  onProgress(i+1);await new Promise(resolve=>setTimeout(resolve,0));
+  const [quality,scale]=presets[i],pdf=await makePdf(pages,{quality,scale});
+  if(pdf.size<=maxBytes)return pdf;
+ }
+ throw Error('ลดไฟล์ให้ไม่เกิน 5 MB ไม่สำเร็จ กรุณาลดจำนวนรูปหรือความยาวรายงาน');
+}
+
+$('downloadPdf').onclick=async()=>{const b=$('downloadPdf');b.disabled=true;b.textContent='กำลังสร้าง PDF…';try{await saveNow();const pages=await buildReport(2);const pdf=await makeLimitedPdf(pages,n=>{b.textContent=n===1?'กำลัง Export คุณภาพสูง…':'กำลังปรับไฟล์ไม่เกิน 5 MB…';});download(pdf,fileName('pdf'));toast('สร้าง PDF แล้ว · '+(pdf.size/1000000).toFixed(2)+' MB')}catch(err){toast('สร้าง PDF ไม่สำเร็จ: '+err.message)}finally{b.disabled=false;b.textContent='↓ ดาวน์โหลด PDF'}};
 $('refreshPreview').onclick=refreshPreview;document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>switchTab(Number(b.dataset.tab)));$('next').onclick=()=>switchTab(tab+1);$('previous').onclick=()=>switchTab(tab-1);$('topPreview').onclick=()=>switchTab(3);document.addEventListener('visibilitychange',()=>{if(document.hidden)saveNow()});
 (async()=>{makeFields();setupSignatures();setupSignatureUploads();try{db=await openDB();const value=await new Promise((resolve,reject)=>{const r=db.transaction('draft').objectStore('draft').get('current');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)});if(value)state=sanitizeDraft(value);$('saveStatus').textContent=value?'เปิดฉบับร่างล่าสุดแล้ว':'พร้อมเริ่มรายงานใหม่'}catch{$('saveStatus').textContent='ใช้การสำรองเป็นไฟล์';toast('เปิดฉบับร่างอัตโนมัติไม่ได้ สามารถกรอกและสำรองเป็นไฟล์ได้')}populate()})();
 </script></body></html>
