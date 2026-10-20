@@ -214,15 +214,15 @@ $('demo').onclick=async()=>{if(!await confirmAction('ทดลองข้อม
 const PW=1240,PH=1754,M=84,RIGHT=PW-M,BOTTOM=1610;
 function dateText(v){if(!v)return '—';const d=new Date(v.length===10?v+'T12:00':v);if(Number.isNaN(d.getTime()))return v;return d.toLocaleDateString('th-TH',{day:'numeric',month:'long',year:'numeric'})+(v.includes('T')?' เวลา '+d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})+' น.':'')}
 function wrapText(ctx,s,width){const lines=[];for(const para of String(s||'—').split('\n')){if(!para){lines.push('');continue}const pieces=typeof Intl.Segmenter==='function'?[...new Intl.Segmenter('th',{granularity:'word'}).segment(para)].map(x=>x.segment):Array.from(para);let line='';for(const piece of pieces){if(ctx.measureText(line+piece).width<=width){line+=piece;continue}if(line.trim())lines.push(line.trimEnd());line='';for(const ch of Array.from(piece)){if(ctx.measureText(line+ch).width>width&&line){lines.push(line);line=''}line+=ch}}lines.push(line.trimEnd())}return lines}
-async function buildReport(){await document.fonts.ready;await document.fonts.load('400 36px Thai');await document.fonts.load('600 24px Thai');const replacements=JSON.parse(JSON.stringify(replacementItems()));const f=JSON.parse(JSON.stringify(state.fields)),photos=state.photos.filter(p=>!p.section).map(p=>({...p})),inlinePhotos=state.photos.filter(p=>p.section).map(p=>({...p})),signatures={...state.signatures},pages=[];let canvas,ctx,y;const logo=await loadImage($('logo').src);function text(s,x,yy,size=23,bold=false,color='#302833'){size=Math.round(size*1.71);ctx.fillStyle=color;ctx.font=`${bold?600:400} ${size}px Thai`;ctx.fillText(s,x,yy)}function line(x1,yy,x2,color='#e7dfe5'){ctx.strokeStyle=color;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x1,yy);ctx.lineTo(x2,yy);ctx.stroke()}function newPage(title){canvas=document.createElement('canvas');canvas.width=PW;canvas.height=PH;ctx=canvas.getContext('2d');ctx.fillStyle='white';ctx.fillRect(0,0,PW,PH);ctx.drawImage(logo,M,62,128,128);text('การไฟฟ้าส่วนภูมิภาค',242,101,30,true,'#74045f');text('กองบำรุงรักษา',242,139,22);text('แผนกบำรุงรักษาระบบจำหน่าย',242,171,21,false,'#796d79');line(M,222,RIGHT,'#74045f');ctx.fillStyle='#c7911b';ctx.fillRect(M,220,150,4);text('รายงานการตรวจสอบและบำรุงรักษาอินเวอร์เตอร์',M,274,27,true);text(title,M,316,23,false,'#74045f');text('เลขที่ '+(f.reportNo||'—').slice(0,35),M,353,19,false,'#796d79');y=389;pages.push(canvas)}function ensure(h,title='รายละเอียดเพิ่มเติม'){if(y+h>BOTTOM)newPage(title)}function section(title){ensure(86,title);ctx.fillStyle='#f5edf3';ctx.fillRect(M,y,RIGHT-M,65);ctx.strokeStyle='#ad8aa5';ctx.lineWidth=1.6;ctx.strokeRect(M,y,RIGHT-M,65);text(title,M+16,y+45,24,true,'#74045f');y+=85}function field(label,value){
-ctx.font='400 39px Thai';const lines=wrapText(ctx,value,RIGHT-M-32);let offset=0;
+async function buildReport(){await document.fonts.ready;await document.fonts.load('400 36px Thai');await document.fonts.load('600 24px Thai');const replacements=JSON.parse(JSON.stringify(replacementItems()));const f=JSON.parse(JSON.stringify(state.fields)),photos=state.photos.filter(p=>!p.section).map(p=>({...p})),inlinePhotos=state.photos.filter(p=>p.section).map(p=>({...p})),signatures={...state.signatures},pages=[];let canvas,ctx,y;const logo=await loadImage($('logo').src);function text(s,x,yy,size=23,bold=false,color='#302833'){size=Math.round(size*1.71);ctx.fillStyle=color;ctx.font=`${bold?600:400} ${size}px Thai`;ctx.fillText(s,x,yy)}function line(x1,yy,x2,color='#e7dfe5'){ctx.strokeStyle=color;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x1,yy);ctx.lineTo(x2,yy);ctx.stroke()}function newPage(title){canvas=document.createElement('canvas');canvas.width=PW;canvas.height=PH;ctx=canvas.getContext('2d');ctx.fillStyle='white';ctx.fillRect(0,0,PW,PH);ctx.drawImage(logo,M,62,128,128);text('การไฟฟ้าส่วนภูมิภาค',242,101,30,true,'#74045f');text('กองบำรุงรักษา',242,139,22);text('แผนกบำรุงรักษาระบบจำหน่าย',242,171,21,false,'#796d79');line(M,222,RIGHT,'#74045f');ctx.fillStyle='#c7911b';ctx.fillRect(M,220,150,4);text('รายงานการตรวจสอบและบำรุงรักษาอินเวอร์เตอร์',M,274,27,true);text(title,M,316,23,false,'#74045f');text('เลขที่ '+(f.reportNo||'—').slice(0,35),M,353,19,false,'#796d79');y=389;pages.push(canvas)}function ensure(h,title='รายละเอียดเพิ่มเติม'){if(y+h>BOTTOM)newPage(title)}function section(title){ensure(215,title);ctx.fillStyle='#f5edf3';ctx.fillRect(M,y,RIGHT-M,65);ctx.strokeStyle='#ad8aa5';ctx.lineWidth=1.6;ctx.strokeRect(M,y,RIGHT-M,65);text(title,M+16,y+45,24,true,'#74045f');y+=85}function field(label,value){
+ctx.font='400 39px Thai';const lines=wrapText(ctx,value,RIGHT-M-32);const totalHeight=54+lines.length*46+8;if(totalHeight<=BOTTOM-389)ensure(totalHeight);let offset=0;
 while(offset<lines.length){
- ensure(130);const available=Math.max(1,Math.floor((BOTTOM-y-64)/51));
- const count=Math.min(available,lines.length-offset),height=64+count*51;
+ ensure(108);const available=Math.max(1,Math.floor((BOTTOM-y-54)/46));
+ const count=Math.min(available,lines.length-offset),height=54+count*46;
  ctx.strokeStyle='#ad8aa5';ctx.lineWidth=1.6;ctx.strokeRect(M,y,RIGHT-M,height);
- text(label+(offset?' (ต่อ)':''),M+16,y+38,20,true,'#625568');
- for(let i=0;i<count;i++)text(lines[offset+i],M+16,y+86+i*51,23);
- y+=height+10;offset+=count;if(offset<lines.length)newPage('รายละเอียดเพิ่มเติม');
+ text(label+(offset?' (ต่อ)':''),M+16,y+34,20,true,'#625568');
+ for(let i=0;i<count;i++)text(lines[offset+i],M+16,y+76+i*46,23);
+ y+=height+8;offset+=count;if(offset<lines.length)newPage('รายละเอียดเพิ่มเติม');
 }}
 function fullFields(list){for(const[id,label,type]of list)field(label,type==='date'||type==='datetime-local'?dateText(f[id]):f[id]);}
 function fields(list){for(let i=0;i<list.length;i++){const row=list[i];if(row[2]==='textarea'||!list[i+1]||list[i+1][2]==='textarea'){const[id,label,type]=row;field(label,type==='date'||type==='datetime-local'?dateText(f[id]):f[id]);continue}const pair=[row,list[++i]],width=(RIGHT-M-32)/2;ctx.font='400 39px Thai';const values=pair.map(([id,label,type])=>wrapText(ctx,type==='date'||type==='datetime-local'?dateText(f[id]):f[id],width-24));const height=58+Math.max(...values.map(v=>v.length))*34;ensure(height+20);for(let j=0;j<2;j++){const x=M+j*(width+32);text(pair[j][1],x+12,y+24,19,true,'#796d79');values[j].forEach((v,k)=>text(v,x+12,y+56+k*34,23));line(x,y+height,x+width)}y+=height+20}}
@@ -231,7 +231,7 @@ async function inlineImages(sectionKey){
  const images=inlinePhotos.filter(p=>p.section===sectionKey);
  if(!images.length)return;
  const heading={alarm:'ภาพรหัสแจ้งเตือน / เหตุการณ์',actions:'ภาพการดำเนินการแก้ไข',summary:'รูปหลังดำเนินงานแล้วเสร็จ'}[sectionKey];
- const columns=sectionKey==='summary'?1:2,gap=24,w=(RIGHT-M-gap*(columns-1))/columns;
+ const columns=sectionKey==='summary'||images.length===1?1:2,gap=24,w=(RIGHT-M-gap*(columns-1))/columns;
  for(let i=0;i<images.length;i+=columns){
   const pair=images.slice(i,i+columns),loaded=await Promise.all(pair.map(p=>loadImage(p.data)));
   const h=Math.min(columns===1?440:340,Math.max(160,...loaded.map(im=>(w-24)*im.height/im.width)));
@@ -245,7 +245,21 @@ async function inlineImages(sectionKey){
  }
 }
 newPage('ข้อมูลโครงการและการเข้าปฏิบัติงาน');section('01  ข้อมูลโครงการ');fullFields(groups.project);
-newPage('ผลการตรวจสอบและการดำเนินการ');section('02  ข้อมูลการปฏิบัติงาน');fullFields(groups.visit);section('03  ผลการตรวจสอบ');for(const[id,label]of groups.inspection){field(label,f[id]);if(['alarm','actions'].includes(id))await inlineImages(id);}
+newPage('ข้อมูลการปฏิบัติงาน');section('02  ข้อมูลการปฏิบัติงาน');fullFields(groups.visit);
+newPage('ผลการตรวจสอบและการแก้ไข');section('03  ผลการตรวจสอบ');
+for(const[id,label]of groups.inspection){
+ const attached=inlinePhotos.filter(p=>p.section===id);
+ ctx.font='400 39px Thai';const textHeight=54+wrapText(ctx,f[id],RIGHT-M-32).length*46+8;
+ if(attached.length){
+  const columns=attached.length===1?1:2,w=(RIGHT-M-24*(columns-1))/columns;
+  const first=await Promise.all(attached.slice(0,columns).map(p=>loadImage(p.data)));
+  const imageHeight=Math.min(columns===1?440:340,Math.max(160,...first.map(im=>(w-24)*im.height/im.width)));
+  const combined=textHeight+85+imageHeight+40;
+  if(combined<=BOTTOM-389)ensure(combined,'ผลการตรวจสอบและการแก้ไข (ต่อ)');
+ }
+ field(label,f[id]);
+ if(['alarm','actions'].includes(id))await inlineImages(id);
+}
 if(photos.length){
  newPage('ภาพประกอบการปฏิบัติงาน');section('04  ภาพประกอบการปฏิบัติงาน');
  const photoRows=orderedPhotoRows(photos);
