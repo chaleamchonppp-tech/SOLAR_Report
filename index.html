@@ -181,18 +181,18 @@ $('demo').onclick=async()=>{if(!await confirmAction('ทดลองข้อม
 const PW=1240,PH=1754,M=84,RIGHT=PW-M,BOTTOM=1610;
 function dateText(v){if(!v)return '—';const d=new Date(v.length===10?v+'T12:00':v);if(Number.isNaN(d.getTime()))return v;return d.toLocaleDateString('th-TH',{day:'numeric',month:'long',year:'numeric'})+(v.includes('T')?' เวลา '+d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})+' น.':'')}
 function wrapText(ctx,s,width){const lines=[];for(const para of String(s||'—').split('\n')){if(!para){lines.push('');continue}const pieces=typeof Intl.Segmenter==='function'?[...new Intl.Segmenter('th',{granularity:'word'}).segment(para)].map(x=>x.segment):Array.from(para);let line='';for(const piece of pieces){if(ctx.measureText(line+piece).width<=width){line+=piece;continue}if(line.trim())lines.push(line.trimEnd());line='';for(const ch of Array.from(piece)){if(ctx.measureText(line+ch).width>width&&line){lines.push(line);line=''}line+=ch}}lines.push(line.trimEnd())}return lines}
-async function buildReport(){await document.fonts.ready;await document.fonts.load('400 24px Thai');await document.fonts.load('600 24px Thai');const replacements=JSON.parse(JSON.stringify(replacementItems()));const f=JSON.parse(JSON.stringify(state.fields)),photos=state.photos.map(p=>({...p})),signatures={...state.signatures},pages=[];let canvas,ctx,y;const logo=await loadImage($('logo').src);function text(s,x,yy,size=23,bold=false,color='#302833'){size=Math.round(size*1.14);ctx.fillStyle=color;ctx.font=`${bold?600:400} ${size}px Thai`;ctx.fillText(s,x,yy)}function line(x1,yy,x2,color='#e7dfe5'){ctx.strokeStyle=color;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x1,yy);ctx.lineTo(x2,yy);ctx.stroke()}function newPage(title){canvas=document.createElement('canvas');canvas.width=PW;canvas.height=PH;ctx=canvas.getContext('2d');ctx.fillStyle='white';ctx.fillRect(0,0,PW,PH);ctx.drawImage(logo,M,62,128,128);text('การไฟฟ้าส่วนภูมิภาค',242,101,30,true,'#74045f');text('กองบำรุงรักษา',242,139,22);text('แผนกบำรุงรักษาระบบจำหน่าย',242,171,21,false,'#796d79');line(M,222,RIGHT,'#74045f');ctx.fillStyle='#c7911b';ctx.fillRect(M,220,150,4);text('รายงานการตรวจสอบและบำรุงรักษาอินเวอร์เตอร์',M,274,27,true);text(title,M,316,23,false,'#74045f');text('เลขที่ '+(f.reportNo||'—').slice(0,35),M,353,19,false,'#796d79');y=389;pages.push(canvas)}function ensure(h,title='รายละเอียดเพิ่มเติม'){if(y+h>BOTTOM)newPage(title)}function section(title){ensure(62,title);ctx.fillStyle='#f5edf3';ctx.fillRect(M,y,RIGHT-M,49);ctx.strokeStyle='#ad8aa5';ctx.lineWidth=1.6;ctx.strokeRect(M,y,RIGHT-M,49);text(title,M+16,y+33,24,true,'#74045f');y+=69}function field(label,value){
-ctx.font='400 26px Thai';const lines=wrapText(ctx,value,RIGHT-M-32);let offset=0;
+async function buildReport(){await document.fonts.ready;await document.fonts.load('400 36px Thai');await document.fonts.load('600 24px Thai');const replacements=JSON.parse(JSON.stringify(replacementItems()));const f=JSON.parse(JSON.stringify(state.fields)),photos=state.photos.map(p=>({...p})),signatures={...state.signatures},pages=[];let canvas,ctx,y;const logo=await loadImage($('logo').src);function text(s,x,yy,size=23,bold=false,color='#302833'){size=Math.round(size*1.71);ctx.fillStyle=color;ctx.font=`${bold?600:400} ${size}px Thai`;ctx.fillText(s,x,yy)}function line(x1,yy,x2,color='#e7dfe5'){ctx.strokeStyle=color;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x1,yy);ctx.lineTo(x2,yy);ctx.stroke()}function newPage(title){canvas=document.createElement('canvas');canvas.width=PW;canvas.height=PH;ctx=canvas.getContext('2d');ctx.fillStyle='white';ctx.fillRect(0,0,PW,PH);ctx.drawImage(logo,M,62,128,128);text('การไฟฟ้าส่วนภูมิภาค',242,101,30,true,'#74045f');text('กองบำรุงรักษา',242,139,22);text('แผนกบำรุงรักษาระบบจำหน่าย',242,171,21,false,'#796d79');line(M,222,RIGHT,'#74045f');ctx.fillStyle='#c7911b';ctx.fillRect(M,220,150,4);text('รายงานการตรวจสอบและบำรุงรักษาอินเวอร์เตอร์',M,274,27,true);text(title,M,316,23,false,'#74045f');text('เลขที่ '+(f.reportNo||'—').slice(0,35),M,353,19,false,'#796d79');y=389;pages.push(canvas)}function ensure(h,title='รายละเอียดเพิ่มเติม'){if(y+h>BOTTOM)newPage(title)}function section(title){ensure(86,title);ctx.fillStyle='#f5edf3';ctx.fillRect(M,y,RIGHT-M,65);ctx.strokeStyle='#ad8aa5';ctx.lineWidth=1.6;ctx.strokeRect(M,y,RIGHT-M,65);text(title,M+16,y+45,24,true,'#74045f');y+=85}function field(label,value){
+ctx.font='400 39px Thai';const lines=wrapText(ctx,value,RIGHT-M-32);let offset=0;
 while(offset<lines.length){
- ensure(94);const available=Math.max(1,Math.floor((BOTTOM-y-48)/34));
- const count=Math.min(available,lines.length-offset),height=44+count*34;
+ ensure(130);const available=Math.max(1,Math.floor((BOTTOM-y-64)/51));
+ const count=Math.min(available,lines.length-offset),height=64+count*51;
  ctx.strokeStyle='#ad8aa5';ctx.lineWidth=1.6;ctx.strokeRect(M,y,RIGHT-M,height);
- text(label+(offset?' (ต่อ)':''),M+16,y+26,20,true,'#625568');
- for(let i=0;i<count;i++)text(lines[offset+i],M+16,y+58+i*34,23);
+ text(label+(offset?' (ต่อ)':''),M+16,y+38,20,true,'#625568');
+ for(let i=0;i<count;i++)text(lines[offset+i],M+16,y+86+i*51,23);
  y+=height+10;offset+=count;if(offset<lines.length)newPage('รายละเอียดเพิ่มเติม');
 }}
 function fullFields(list){for(const[id,label,type]of list)field(label,type==='date'||type==='datetime-local'?dateText(f[id]):f[id]);}
-function fields(list){for(let i=0;i<list.length;i++){const row=list[i];if(row[2]==='textarea'||!list[i+1]||list[i+1][2]==='textarea'){const[id,label,type]=row;field(label,type==='date'||type==='datetime-local'?dateText(f[id]):f[id]);continue}const pair=[row,list[++i]],width=(RIGHT-M-32)/2;ctx.font='400 26px Thai';const values=pair.map(([id,label,type])=>wrapText(ctx,type==='date'||type==='datetime-local'?dateText(f[id]):f[id],width-24));const height=58+Math.max(...values.map(v=>v.length))*34;ensure(height+20);for(let j=0;j<2;j++){const x=M+j*(width+32);text(pair[j][1],x+12,y+24,19,true,'#796d79');values[j].forEach((v,k)=>text(v,x+12,y+56+k*34,23));line(x,y+height,x+width)}y+=height+20}}
+function fields(list){for(let i=0;i<list.length;i++){const row=list[i];if(row[2]==='textarea'||!list[i+1]||list[i+1][2]==='textarea'){const[id,label,type]=row;field(label,type==='date'||type==='datetime-local'?dateText(f[id]):f[id]);continue}const pair=[row,list[++i]],width=(RIGHT-M-32)/2;ctx.font='400 39px Thai';const values=pair.map(([id,label,type])=>wrapText(ctx,type==='date'||type==='datetime-local'?dateText(f[id]):f[id],width-24));const height=58+Math.max(...values.map(v=>v.length))*34;ensure(height+20);for(let j=0;j<2;j++){const x=M+j*(width+32);text(pair[j][1],x+12,y+24,19,true,'#796d79');values[j].forEach((v,k)=>text(v,x+12,y+56+k*34,23));line(x,y+height,x+width)}y+=height+20}}
 newPage('ข้อมูลโครงการและการเข้าปฏิบัติงาน');section('01  ข้อมูลโครงการ');fullFields(groups.project);
 newPage('ผลการตรวจสอบและการดำเนินการ');section('02  ข้อมูลการปฏิบัติงาน');fullFields(groups.visit);section('03  ผลการตรวจสอบ');fullFields(groups.inspection);
 if(photos.length){
@@ -200,23 +200,23 @@ if(photos.length){
  const photoRows=orderedPhotoRows(photos);
  const gap=24,w=(RIGHT-M-gap)/2;
  for(const row of photoRows){
-  const cells=await Promise.all(row.map(async p=>{if(!p)return null;const im=await loadImage(p.data);ctx.font='400 25px Thai';return {p,im,caption:p.caption?wrapText(ctx,p.caption,w-24):[]};}));
+  const cells=await Promise.all(row.map(async p=>{if(!p)return null;const im=await loadImage(p.data);ctx.font='400 38px Thai';return {p,im,caption:p.caption?wrapText(ctx,p.caption,w-24):[]};}));
   const photoH=Math.min(360,Math.max(140,...cells.filter(Boolean).map(c=>(w-16)*c.im.height/c.im.width)));
   const captionLines=Math.max(0,...cells.filter(Boolean).map(c=>c.caption.length));
-  ensure(43+photoH+32+captionLines*31+20,'ภาพประกอบการปฏิบัติงาน (ต่อ)');
+  ensure(60+photoH+46+captionLines*47+20,'ภาพประกอบการปฏิบัติงาน (ต่อ)');
   for(let j=0;j<cells.length;j++){
    const cell=cells[j];if(!cell)continue;const {p,im,caption}=cell,x=M+j*(w+gap);
-   text(p.kind,x+8,y+25,23,true,'#74045f');
-   const top=y+43;ctx.fillStyle='#faf7f9';ctx.fillRect(x,top,w,photoH);ctx.strokeStyle='#ad8aa5';ctx.lineWidth=1;ctx.strokeRect(x,top,w,photoH);
+   text(p.kind,x+8,y+39,23,true,'#74045f');
+   const top=y+60;ctx.fillStyle='#faf7f9';ctx.fillRect(x,top,w,photoH);ctx.strokeStyle='#ad8aa5';ctx.lineWidth=1;ctx.strokeRect(x,top,w,photoH);
    const ratio=Math.min((w-16)/im.width,(photoH-16)/im.height);
    ctx.drawImage(im,x+(w-im.width*ratio)/2,top+(photoH-im.height*ratio)/2,im.width*ratio,im.height*ratio);
-   caption.forEach((v,k)=>text(v,x+10,top+photoH+30+k*31,22));
+   caption.forEach((v,k)=>text(v,x+10,top+photoH+43+k*47,22));
   }
-  y+=43+photoH+32+captionLines*31+20;
+  y+=60+photoH+46+captionLines*47+20;
  }
 }
-newPage('สรุปและลงนามรับทราบ');section('05  รายการเปลี่ยนทดแทนอุปกรณ์');if(!replacements.length)field('รายการอุปกรณ์','ไม่มีการเปลี่ยนทดแทน');for(let i=0;i<replacements.length;i++){section('อุปกรณ์ '+(i+1));for(const [key,label]of groups.replacement)field(label,replacements[i][key]);}section('06  สรุปผลการดำเนินงาน');fields(groups.outcome);const signRows=[['staff',M,'ผู้ปฏิบัติงาน กฟภ.'],['customer',652,'ผู้ใช้บริการ / ผู้แทนสถานที่']];
-ctx.font='400 24px Thai';
+newPage('สรุปและลงนามรับทราบ');section('05  รายการเปลี่ยนทดแทนอุปกรณ์');if(!replacements.length)field('รายการอุปกรณ์','ไม่มีการเปลี่ยนทดแทน');for(let i=0;i<replacements.length;i++){section('อุปกรณ์ '+(i+1));for(const [key,label]of groups.replacement)field(label,replacements[i][key]);}section('06  สรุปผลการดำเนินงาน');fullFields(groups.outcome);const signRows=[['staff',M,'ผู้ปฏิบัติงาน กฟภ.'],['customer',652,'ผู้ใช้บริการ / ผู้แทนสถานที่']];
+ctx.font='400 36px Thai';
 const signDetails=signRows.map(([key])=>{
  const owner=key==='customer';
  return [
@@ -226,15 +226,15 @@ const signDetails=signRows.map(([key])=>{
  f[key+'Date']?dateText(f[key+'Date']):(owner?'วันที่':'—')
  ];
 });
-const signHeight=240+Math.max(...signDetails.map(v=>v.length))*34;
-ensure(69+signHeight,'ลงนามรับทราบ');section('07  ลงนามรับทราบ');
+const signHeight=270+Math.max(...signDetails.map(v=>v.length))*51;
+ensure(85+signHeight,'ลงนามรับทราบ');section('07  ลงนามรับทราบ');
 for(let j=0;j<signRows.length;j++){
- const[key,x,label]=signRows[j];text(label,x,y+25,22,true,'#74045f');
- if(signatures[key]){const im=await loadImage(signatures[key]);ctx.drawImage(im,x,y+38,480,155)}
- line(x,y+191,x+480);
- signDetails[j].forEach((value,k)=>text(value,x,y+229+k*34,21,false,k===0?'#302833':'#796d79'));
+ const[key,x,label]=signRows[j];text(label,x,y+39,22,true,'#74045f');
+ if(signatures[key]){const im=await loadImage(signatures[key]);ctx.drawImage(im,x,y+58,480,155)}
+ line(x,y+222,x+480);
+ signDetails[j].forEach((value,k)=>text(value,x,y+266+k*51,21,false,k===0?'#302833':'#796d79'));
 }
-for(let i=0;i<pages.length;i++){ctx=pages[i].getContext('2d');line(M,1668,RIGHT);text('กฟภ. / แบบฟอร์มตัวอย่างสำหรับปรับใช้ภายในหน่วยงาน',M,1702,17,false,'#796d79');text(`หน้า ${i+1} / ${pages.length}`,RIGHT-120,1702,18,true,'#74045f')}return pages}
+for(let i=0;i<pages.length;i++){ctx=pages[i].getContext('2d');line(M,1668,RIGHT);text('กฟภ. / แบบฟอร์มตัวอย่างสำหรับปรับใช้ภายในหน่วยงาน',M,1702,17,false,'#796d79');text(`หน้า ${i+1} / ${pages.length}`,RIGHT-180,1702,18,true,'#74045f')}return pages}
 async function refreshPreview(){const token=++renderToken;$('refreshPreview').disabled=true;$('downloadPdf').disabled=true;$('pageCount').textContent='กำลังจัดหน้ารายงาน…';const missing=required.filter(f=>!state.fields[f[0]]?.trim()).map(f=>f[1]);$('missingNotice').hidden=!missing.length;$('missingNotice').textContent='ยังไม่ได้ระบุ: '+missing.join(' · ');try{const pages=await buildReport();if(token!==renderToken)return;previewCanvases=pages;$('preview').replaceChildren(...pages);$('pageCount').textContent=`A4 · ${pages.length} หน้า · จัดหน้าตามความยาวข้อความและจำนวนภาพ`}catch(err){toast('สร้างตัวอย่างไม่สำเร็จ: '+err.message);$('pageCount').textContent='กรุณาลองใหม่'}finally{if(token===renderToken){$('refreshPreview').disabled=false;$('downloadPdf').disabled=false}}}
 function makePdf(canvases){const encoder=new TextEncoder(),parts=[],offsets=[0];let length=0;const add=v=>{const bytes=typeof v==='string'?encoder.encode(v):v;parts.push(bytes);length+=bytes.length};const obj=(n,body)=>{offsets[n]=length;add(`${n} 0 obj\n`);add(body);add('\nendobj\n')};add('%PDF-1.4\n');obj(1,'<< /Type /Catalog /Pages 2 0 R >>');obj(2,`<< /Type /Pages /Count ${canvases.length} /Kids [${canvases.map((_,i)=>`${3+i*3} 0 R`).join(' ')}] >>`);canvases.forEach((c,i)=>{const n=3+i*3;obj(n,`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /XObject << /Im0 ${n+1} 0 R >> >> /Contents ${n+2} 0 R >>`);const raw=atob(c.toDataURL('image/jpeg',.93).split(',')[1]),bytes=Uint8Array.from(raw,ch=>ch.charCodeAt(0));offsets[n+1]=length;add(`${n+1} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${c.width} /Height ${c.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${bytes.length} >>\nstream\n`);add(bytes);add('\nendstream\nendobj\n');const stream='q\n595.28 0 0 841.89 0 0 cm\n/Im0 Do\nQ\n';obj(n+2,`<< /Length ${encoder.encode(stream).length} >>\nstream\n${stream}endstream`)});const xref=length,count=3+canvases.length*3;add(`xref\n0 ${count}\n0000000000 65535 f \n`);for(let i=1;i<count;i++)add(String(offsets[i]).padStart(10,'0')+' 00000 n \n');add(`trailer\n<< /Size ${count} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`);return new Blob(parts,{type:'application/pdf'})}
 $('downloadPdf').onclick=async()=>{const b=$('downloadPdf');b.disabled=true;b.textContent='กำลังสร้าง PDF…';try{await saveNow();const pages=await buildReport();download(makePdf(pages),fileName('pdf'));toast('สร้าง PDF เรียบร้อยแล้ว')}catch(err){toast('สร้าง PDF ไม่สำเร็จ: '+err.message)}finally{b.disabled=false;b.textContent='↓ ดาวน์โหลด PDF'}};
